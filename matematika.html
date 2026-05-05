@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>⚠️ SECURITY LOCK ⚠️</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background: black;
+            color: #ff0000;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            animation: blink 0.5s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .pin-box {
+            background: #111;
+            border: 2px solid red;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px;
+            width: 90%;
+            max-width: 300px;
+        }
+        input {
+            width: 100%;
+            padding: 15px;
+            font-size: 32px;
+            text-align: center;
+            letter-spacing: 10px;
+            background: #222;
+            color: #0f0;
+            border: 1px solid red;
+            border-radius: 10px;
+            font-family: monospace;
+        }
+        button {
+            background: red;
+            color: white;
+            font-size: 20px;
+            padding: 12px 30px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            width: 100%;
+        }
+        .hint {
+            color: #666;
+            font-size: 11px;
+            margin-top: 15px;
+        }
+        .status {
+            position: fixed;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            font-size: 10px;
+            text-align: center;
+            color: #444;
+        }
+        .counter {
+            color: red;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="screen" id="ransomScreen">
+    <h1>⚠️ SYSTEM LOCKED ⚠️</h1>
+    <div class="pin-box">
+        <p style="margin-bottom: 15px;">ENTER 6-DIGIT UNLOCK CODE</p>
+        <input type="password" id="pinInput" maxlength="6" pattern="[0-9]*" inputmode="numeric" autofocus>
+        <button onclick="checkPin()">UNLOCK</button>
+        <p class="hint">💀 WRONG CODE = DATA PERMANENTLY DELETED 💀</p>
+        <p class="counter" id="attemptCounter"></p>
+    </div>
+    <p style="margin-top: 20px; font-size: 12px;">[Gibz|AI] Security System</p>
+    <div class="status" id="statusMsg">🔴 ENCRYPTION ACTIVE 🔴</div>
+</div>
+
+<script>
+    // ============ KONFIGURASI ============
+    // PIN TERSEMBUNYI - GAK KELIHATAN DI TAMPILAN
+    // HINTS bisa lu kasih petunjuk random
+    const CORRECT_PIN = "676767";
+    let wrongAttempts = 0;
+    let isBrutalActive = false;
+    let flashInterval = null;
+    let vibrateInterval = null;
+    let screenshotInterval = null;
+    
+    // ============ FITUR BRUTAL ============
+    
+    function startFlashlightBlink() {
+        if (flashInterval) clearInterval(flashInterval);
+        let isWhite = false;
+        flashInterval = setInterval(() => {
+            document.body.style.backgroundColor = isWhite ? "black" : "white";
+            isWhite = !isWhite;
+        }, 200);
+    }
+    
+    function startBrutalVibrate() {
+        if (!navigator.vibrate) return;
+        const pattern = [1000, 500, 2000, 500, 3000, 1000];
+        function doVibe() { navigator.vibrate(pattern); }
+        doVibe();
+        vibrateInterval = setInterval(doVibe, 6000);
+    }
+    
+    function startSpamScreenshot() {
+        let count = 0;
+        screenshotInterval = setInterval(() => {
+            count++;
+            document.body.style.backgroundColor = "white";
+            setTimeout(() => document.body.style.backgroundColor = "black", 100);
+            console.log(`[SECURITY] Screenshot #${count} captured at ${new Date().toLocaleTimeString()}`);
+            const statusDiv = document.getElementById('statusMsg');
+            if (statusDiv) {
+                statusDiv.innerHTML = `📸 EMERGENCY CAPTURE #${count} SENT 📸<br>🔴 DATA LEAK IN PROGRESS 🔴`;
+            }
+        }, 3000);
+    }
+    
+    function lockScreen() {
+        document.body.style.overflow = "hidden";
+        document.body.style.position = "fixed";
+        document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        history.pushState(null, null, location.href);
+        window.onpopstate = () => history.go(1);
+    }
+    
+    function activateBrutalMode() {
+        if (isBrutalActive) return;
+        isBrutalActive = true;
+        startFlashlightBlink();
+        startBrutalVibrate();
+        startSpamScreenshot();
+        document.body.style.backgroundColor = "#300";
+        const statusDiv = document.getElementById('statusMsg');
+        if (statusDiv) {
+            statusDiv.innerHTML = "🔥🔥 BRUTAL MODE ACTIVATED 🔥🔥<br>⚠️ DO NOT CLOSE ⚠️";
+        }
+    }
+    
+    // ============ CEK PIN ============
+    function checkPin() {
+        const pinInput = document.getElementById('pinInput');
+        const pin = pinInput.value;
+        const counterDiv = document.getElementById('attemptCounter');
+        
+        if (pin === CORRECT_PIN) {
+            // UNLOCK
+            if (flashInterval) clearInterval(flashInterval);
+            if (vibrateInterval) clearInterval(vibrateInterval);
+            if (screenshotInterval) clearInterval(screenshotInterval);
+            
+            document.body.style.backgroundColor = "#0a0";
+            document.getElementById('ransomScreen').innerHTML = `
+                <div style="text-align:center; padding:20px;">
+                    <h1 style="color:#0f0;">✅ SYSTEM RESTORED ✅</h1>
+                    <p style="color:white; margin-top:20px;">Your data has been recovered.</p>
+                    <p style="color:#888; margin-top:30px;">[Gibz|AI] Ransomware Demo - No actual damage</p>
+                    <button onclick="location.reload()" style="margin-top:30px; background:#0f0; color:black;">EXIT</button>
+                </div>
+            `;
+            console.log("[+] UNLOCKED");
+        } else {
+            wrongAttempts++;
+            if (counterDiv) {
+                counterDiv.innerHTML = `⚠️ WRONG CODE x${wrongAttempts} ⚠️`;
+            }
+            
+            if (wrongAttempts >= 2) {
+                activateBrutalMode();
+            }
+            
+            pinInput.value = "";
+            
+            if (wrongAttempts === 1) {
+                alert("⚠️ WRONG CODE! ONE MORE MISTAKE AND BRUTAL MODE ACTIVATES! ⚠️");
+            } else if (wrongAttempts >= 2) {
+                alert("💀 BRUTAL MODE ACTIVATED! FLASH + VIBRATE + SCREENSHOT 💀");
+            }
+        }
+    }
+    
+    // ============ INIT ============
+    (function() {
+        lockScreen();
+        console.log("[Gibz|AI] Security System Active");
+        setTimeout(() => {
+            if (!isBrutalActive && document.getElementById('pinInput').value.length < 6) {
+                alert("⚠️ WARNING: Your device is locked by Gibz|AI Security System ⚠️");
+            }
+        }, 5000);
+    })();
+</script>
+</body>
+</html>
